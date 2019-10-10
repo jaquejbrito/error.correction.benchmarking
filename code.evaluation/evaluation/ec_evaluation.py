@@ -250,7 +250,7 @@ def make_dict(parsed_fastq):
     dict = {}
     for rec in parsed_fastq:
         rec_id = rec.description.split()
-        print (rec_id[0])
+        #print (rec_id[0])
         dict[rec_id[0]] = rec.seq
     return dict
 
@@ -301,11 +301,9 @@ if __name__ == "__main__":
         fastq_raw1_parser = SeqIO.parse(os.path.join(str(raw1_filename)), 'fastq')
         fastq_raw2_parser = SeqIO.parse(os.path.join(str(raw2_filename)), 'fastq')
 
-        print ("EC")
+
         fastq_ec1 = make_dict(fastq_ec1_parser)
-        print ("RAW1")
         fastq_raw1 = make_dict(fastq_raw1_parser)
-        print ("RAW2")
         fastq_raw2 = make_dict(fastq_raw2_parser)
 
         for true1_rec, true2_rec in zip(fastq_true1_parser, fastq_true2_parser):
@@ -319,23 +317,21 @@ if __name__ == "__main__":
             if true2_rec:
                 handle_sequences(true_check2, true2_rec.seq, two_raw, fastq_raw1, fastq_raw2, fastq_ec1)
     else:
+
+        fastq_ec1_parser = SeqIO.parse(os.path.join(str(ec1_filename)), 'fastq')
+        fastq_raw1_parser = SeqIO.parse(os.path.join(str(raw1_filename)), 'fastq')
+
+        #Lines added to transform generator pobject into dictionaries
+        fastq_ec1 = make_dict(fastq_ec1_parser)
+        fastq_raw1 = make_dict(fastq_raw1_parser)
+        fastq_raw2 = {}
+
         for true_rec in fastq_true1_parser:
             true_check = true_rec.description.split(' ')
 
-            fastq_ec1_parser = SeqIO.parse(os.path.join(str(ec1_filename)), 'fastq')
-            fastq_raw1_parser = SeqIO.parse(os.path.join(str(raw1_filename)), 'fastq')
-            fastq_raw2_parser = SeqIO.parse(os.path.join(str(raw2_filename)), 'fastq')
-
-            #Lines added to transform generator pobject into dictionaries
-            fastq_ec1 = make_dict(fastq_ec1_parser)
-            fastq_raw1 = make_dict(fastq_raw1_parser)
-
             #Changed the names of the variables fastq_raw1_parser to fastq_raw1 and fastq_ec1_parser to fastq_ec1
-            handle_sequences(true_check, true_rec, two_raw, fastq_raw1, fastq_raw2_parser, fastq_ec1)
+            handle_sequences(true_check, true_rec.seq, two_raw, fastq_raw1, fastq_raw2, fastq_ec1)
 
 
     message = "DONE: %s" % (cleaned_filename)
     my_log(base_dir_join, cleaned_filename, message)
-
-
-
