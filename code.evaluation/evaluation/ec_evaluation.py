@@ -23,6 +23,7 @@ import csv
 import uuid
 import subprocess
 import time
+import logging
 
 
 def msa(true_sequence, raw_sequence, ec_sequence, description):
@@ -43,8 +44,8 @@ def msa(true_sequence, raw_sequence, ec_sequence, description):
 
     # run the msa
     subprocess.call(["/u/home/k/keithgmi/tools/./muscle3.8.31_i86linux64",
-                     "-in", "/u/flashscratch/k/keithgmi/master_wrapper_msa/%s.fasta" %id_temp,
-                     "-out", "/u/flashscratch/k/keithgmi/master_wrapper_msa/%s.fasta" %id_msa])
+                   "-in", "/u/flashscratch/k/keithgmi/master_wrapper_msa/%s.fasta" %id_temp,
+                   "-out", "/u/flashscratch/k/keithgmi/master_wrapper_msa/%s.fasta" %id_msa])
 
     # remove the temporary file from prior to the msa
     os.remove("/u/flashscratch/k/keithgmi/master_wrapper_msa/%s.fasta" % id_temp)
@@ -59,10 +60,10 @@ def msa(true_sequence, raw_sequence, ec_sequence, description):
     os.remove("/u/flashscratch/k/keithgmi/master_wrapper_msa/%s.fasta" % id_msa)
 
 
-    print (description)
-    print ("True:", aligned["TRUE"])
-    print ("Raw: ", aligned["RAW"])
-    print ("EC:  ", aligned["EC"])
+    logging.info (description)
+    logging.info ("True:"+ aligned["TRUE"])
+    logging.info ("Raw: "+ aligned["RAW"])
+    logging.info ("EC:  "+ aligned["EC"])
 
     return aligned["TRUE"], aligned["RAW"], aligned["EC"]
 
@@ -151,14 +152,14 @@ def analyze_bases(true_read, raw_read, ec_read):
 
         else:
             message = "ERROR Base Evaluation Case Was Not Found."
-            print (message)
+            logging.info (message)
             my_log(base_dir_join, cleaned_filename, message)
         pos_marker += 1
 
     length = len(true_read)
     if length != sum(stats_dict.values()):
         message = "ERROR in Base Level Evaluation Summary"
-        print (message)
+        logging.info (message)
         my_log(base_dir_join, cleaned_filename, message)
     position_calls.update(trim_positions)
     return stats_dict, length, position_calls
@@ -173,31 +174,31 @@ def analyze_read(stats_dict, length):
 
     # If all bases are the TN then the read is a TN.
     if stats_dict['TN'] == non_trim_summary:
-        print ("TN")
+        logging.info ("TN")
         return "TN"
 
     # If there are normal FP but no other FP(INDEL/trim) then the read is a normal FP.
     elif stats_dict['FP'] != 0 and stats_dict['FP INDEL'] == 0:
-        print ("FP")
+        logging.info ("FP")
         return "FP"
 
     # Next if there are FP from INDEL then the read is as well.
     elif stats_dict['FP INDEL'] != 0:
-        print ("FP INDEL")
+        logging.info ("FP INDEL")
         return "FP INDEL"
 
     # If there are any TP bases and no FN bases then the read is a TP
     elif stats_dict['TP'] != 0 and stats_dict['FN'] == 0 and stats_dict['FN WRONG'] == 0:
-        print ("TP")
+        logging.info ("TP")
         return "TP"
 
     # Otherwise the read is a FN
     elif stats_dict['FN'] != 0 and stats_dict['FN WRONG'] == 0:
-        print ("FN")
+        logging.info ("FN")
         return "FN"
 
     else:
-        print ("FN WRONG")
+        logging.info ("FN WRONG")
         return "FN WRONG"
 
 
@@ -233,7 +234,7 @@ def handle_sequences(true_check, true_rec, two_raw, fastq_raw1_parser, fastq_raw
                 position_calls = base_counts[2]
                 length = base_counts[1]
                 base_stats = base_counts[0]
-                print (base_stats)
+                logging.info (base_stats)
                 read_class = analyze_read(base_stats, length)
 
 
@@ -250,7 +251,6 @@ def make_dict(parsed_fastq):
     dict = {}
     for rec in parsed_fastq:
         rec_id = rec.description.split()
-        #print (rec_id[0])
         dict[rec_id[0]] = rec.seq
     return dict
 
@@ -282,6 +282,8 @@ if __name__ == "__main__":
 
     global cleaned_filename
     cleaned_filename = end_file_directory[-1].replace(".fastq", "")
+
+    logging.basicConfig(filename=base_dir_join+cleaned_filename+'_info.log', format='%(message)s', level=logging.INFO)
 
     fastq_true1_parser = SeqIO.parse(os.path.join(str(true1_filename)), 'fastq')
 

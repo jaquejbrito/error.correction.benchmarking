@@ -62,6 +62,3 @@ def data_compression(base_dir_join, file_name, read_name, length, position_calls
             position = key
             call, true_bp, raw_bp, ec_bp = value[0], value[1], value[2], value[3]
             data_comp.writerow([read_name, length, position, call, true_bp, raw_bp, ec_bp])
-
-
-
