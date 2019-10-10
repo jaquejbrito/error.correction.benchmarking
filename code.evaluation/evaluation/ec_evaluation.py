@@ -25,6 +25,7 @@ import subprocess
 import time
 import logging
 
+my_dir_path = "/Users/jaquejbrito/Projects/ErrorCorrection"
 
 def msa(true_sequence, raw_sequence, ec_sequence, description):
     #TODO
@@ -33,7 +34,7 @@ def msa(true_sequence, raw_sequence, ec_sequence, description):
     # create a temporary fasta with id for the msa output
     id_msa = uuid.uuid4()
 
-    # alter directory based on where temporary msas can go (this can use a lot of memory)
+     # alter directory based on where temporary msas can go (this can use a lot of memory)
     with open('/u/flashscratch/k/keithgmi/master_wrapper_msa/%s.fasta' %id_temp, 'w') as fasta:
         fasta.write(">TRUE\n")
         fasta.write(str(true_sequence) + '\n')
@@ -210,17 +211,17 @@ def find_match(fastq, true):
         return None
 
 
-def handle_sequences(true_check, true_rec, two_raw, fastq_raw1_parser, fastq_raw2_parser, fastq_ec1_parser):
+def handle_sequences(true_check, true_rec, two_raw, fastq_raw1_dict, fastq_raw2_dict, fastq_ec1_dict):
 
     if two_raw is True:
-        raw_rec = find_match(fastq_raw1_parser, true_check[0])
+        raw_rec = find_match(fastq_raw1_dict, true_check[0])
         if raw_rec is None:
-            raw_rec = find_match(fastq_raw2_parser, true_check[0])
+            raw_rec = find_match(fastq_raw2_dict, true_check[0])
     else:
-        raw_rec = find_match(fastq_raw1_parser, true_check[0])
+        raw_rec = find_match(fastq_raw1_dict, true_check[0])
 
     if raw_rec is not None:
-        ec_rec = find_match(fastq_ec1_parser, true_check[0])
+        ec_rec = find_match(fastq_ec1_dict, true_check[0])
 
         if ec_rec is not None:
             alignment = msa(true_rec, raw_rec, ec_rec, true_check[0])
@@ -247,7 +248,8 @@ def handle_sequences(true_check, true_rec, two_raw, fastq_raw1_parser, fastq_raw
         my_log(base_dir_join, cleaned_filename, message)
 
 
-def make_dict(parsed_fastq):
+def make_dict(filename):
+    parsed_fastq = SeqIO.parse(filename, 'fastq')
     dict = {}
     for rec in parsed_fastq:
         rec_id = rec.description.split()
@@ -299,14 +301,10 @@ if __name__ == "__main__":
         two_true = True
 
     if two_true == True:
-        fastq_ec1_parser = SeqIO.parse(os.path.join(str(ec1_filename)), 'fastq')
-        fastq_raw1_parser = SeqIO.parse(os.path.join(str(raw1_filename)), 'fastq')
-        fastq_raw2_parser = SeqIO.parse(os.path.join(str(raw2_filename)), 'fastq')
 
-
-        fastq_ec1 = make_dict(fastq_ec1_parser)
-        fastq_raw1 = make_dict(fastq_raw1_parser)
-        fastq_raw2 = make_dict(fastq_raw2_parser)
+        fastq_ec1 = make_dict(os.path.join(str(ec1_filename)))
+        fastq_raw1 = make_dict(os.path.join(str(raw1_filename)))
+        fastq_raw2 = make_dict(os.path.join(str(raw2_filename)))
 
         for true1_rec, true2_rec in zip(fastq_true1_parser, fastq_true2_parser):
 
@@ -320,12 +318,9 @@ if __name__ == "__main__":
                 handle_sequences(true_check2, true2_rec.seq, two_raw, fastq_raw1, fastq_raw2, fastq_ec1)
     else:
 
-        fastq_ec1_parser = SeqIO.parse(os.path.join(str(ec1_filename)), 'fastq')
-        fastq_raw1_parser = SeqIO.parse(os.path.join(str(raw1_filename)), 'fastq')
-
         #Lines added to transform generator pobject into dictionaries
-        fastq_ec1 = make_dict(fastq_ec1_parser)
-        fastq_raw1 = make_dict(fastq_raw1_parser)
+        fastq_ec1 = make_dict(os.path.join(str(ec1_filename)))
+        fastq_raw1 = make_dict(os.path.join(str(raw1_filename)))
         fastq_raw2 = {}
 
         for true_rec in fastq_true1_parser:
